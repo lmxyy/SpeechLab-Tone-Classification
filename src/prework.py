@@ -3,6 +3,7 @@ import sys,os
 import logging
 import numpy as np
 import random
+import scipy.interpolate
 from scipy.interpolate import UnivariateSpline
 
 logger = logging.getLogger('prework')
@@ -13,9 +14,13 @@ logger.setLevel(logging.INFO)
 stream.setFormatter(formatter)
 logger.addHandler(stream)
 
-threshold = 0.1
-H = 16
-W = 16
+threshold_f0 = 0.2
+threshold_engy = 0.4
+qualify_f0 = 0.6
+baseline_engy = 0.01
+C = 2
+H = 1
+W = 256
 
 def getArr(name):
     f = open(name,'r');
@@ -25,26 +30,31 @@ def getArr(name):
     return np.array(ret)
 
 def spline(y,x,x_pred):
-    f = UnivariateSpline(x, y, s=1)
+    f = scipy.interpolate.interp1d(x, y, kind='cubic')
+    # f = UnivariateSpline(x,y,s = 1)
     return f(x_pred)
 
 def getData(name):
     f0 = getArr(name+'.f0')
     engy = getArr(name+'.engy')
+    x = np.array([i/len(engy) for i in range(len(engy))])
     index = []
+    f0_mx = np.max(f0)
     engy_mx = np.max(engy)
-    f0_mx = np.max(engy)
+    f0 /= f0_mx
+    engy /= engy_mx
     for i in range(len(engy)):
-        if engy[i]/engy_mx < threshold:
+        if (engy[i] < threshold_engy or f0[i] < threshold_f0) and f0[i] < qualify_f0:
             continue
         index.append(i)
     f0 = f0[index]
     engy = engy[index]
-    f0 /= f0_mx
-    engy /= engy_mx
-    index = random.sample([i for i in range(len(f0))],min(len(f0),75))
-    index.sort()
-    x = np.array([i/len(engy) for i in range(len(engy))])
+    x = x[index]
+    x = (x-np.min(x))/(np.max(x)-np.min(x))
+
+    index = random.sample([i for i in range(1,len(f0)-1)],min(len(f0),10))
+    index.append(0)
+    index.append(len(f0)-1)
     x_pred = np.linspace(0, 1, H*W)
     f0 = spline(f0[index],x[index],x_pred)
     engy = spline(engy[index],x[index],x_pred)
@@ -73,8 +83,8 @@ def work_train(train_set,attr):
             item = {'f0':f0,'engy':engy}
             data[label].append(item)
             cnt += 1
-            # if cnt % 100 == 0:
-            #     logger.info('Finish %.2f%% data of the label %s.'%(100*cnt/nfiles,label))
+            if cnt % 100 == 0:
+                logger.info('Finish %.2f%% data of the label %s.'%(100*cnt/nfiles,label))
         total += cnt
         logger.info('Finish handling the label '+label+'.')
     logger.info('Start vectorization.')
@@ -124,7 +134,6 @@ def work_test(test_set):
 
     logger.info('Save the vectors to ../data/cache.')
     logger.info('Finish handling %s data.' % ('test'))
-
         
 if __name__ == '__main__':
     if len(sys.argv) != 2:

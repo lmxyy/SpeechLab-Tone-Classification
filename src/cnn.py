@@ -15,7 +15,7 @@ class CNN(nn.Module):
         conv_params = [{'stride':1,'pad':(conv_dims[i][1]-1)>>1} for i in range(self.num_conv_layers)]
         if connect_conv != None:
             conv_params.append({'stride':1,'pad':(connect_conv[1] - 1)>>1})
-        # pool_param = {'pool_size': (2,2), 'stride': 2}
+        pool_param = {'pool_size': (1,2), 'stride': (1,2)}
         
         for i in range(self.num_conv_layers):
             if i == 0:
@@ -40,11 +40,11 @@ class CNN(nn.Module):
                         eps = 1e-5,
                         momentum = 0.1
                     ),
-                    nn.ReLU()# ,
-                    # nn.MaxPool2d(
-                    #     kernel_size=self.pool_param['pool_size'],
-                    #     stride = self.pool_param['stride']
-                    # )
+                    nn.ReLU(),
+                    nn.MaxPool2d(
+                        kernel_size = pool_param['pool_size'],
+                        stride = pool_param['stride']
+                    )
                 ))
             else:
                 convs.append(nn.Sequential(
@@ -55,11 +55,11 @@ class CNN(nn.Module):
                         stride = conv_params[i]['stride'],
                         padding = conv_params[i]['pad']
                     ),
-                    nn.ReLU()# ,
-                    # nn.MaxPool2d(
-                    #     kernel_size = pool_param['pool_size'],
-                    #     stride = pool_param['stride']
-                    # )
+                    nn.ReLU(),
+                    nn.MaxPool2d(
+                        kernel_size = pool_param['pool_size'],
+                        stride = pool_param['stride']
+                    )
                 ))
 
         if connect_conv != None:
@@ -72,7 +72,7 @@ class CNN(nn.Module):
                             stride = conv_params[i]['stride'],
                             padding = conv_params[i]['pad']
                         ),
-                        nn.BatchNorm2D(
+                        nn.BatchNorm2d(
                             connect_conv[0],
                             eps = 1e-5,
                             momentum = 0.1
@@ -97,11 +97,11 @@ class CNN(nn.Module):
             current_out_features = hidden_dims[i]
             if i == 0:
                 if connect_conv != None:
-                    # current_in_features = (connect_conv[0]*input_dim[1]*input_dim[2])>>(2*self.num_conv_layers)
-                    current_in_features = (connect_conv[0]*input_dim[1]*input_dim[2])
+                    current_in_features = (connect_conv[0]*input_dim[1]*input_dim[2])>>(self.num_conv_layers)
+                    # current_in_features = (connect_conv[0]*input_dim[1]*input_dim[2])
                 else:
-                    # current_in_features = (conv_dims[-1][0]*input_dim[1]*input_dim[2])>>(2*self.num_conv_layers)
-                    current_in_features = (conv_dims[-1][0]*input_dim[1]*input_dim[2])
+                    current_in_features = (conv_dims[-1][0]*input_dim[1]*input_dim[2])>>(self.num_conv_layers)
+                    # current_in_features = (conv_dims[-1][0]*input_dim[1]*input_dim[2])
             else:
                 current_in_features = hidden_dims[i-1]
             if use_batchnorm:

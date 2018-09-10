@@ -6,7 +6,7 @@ import numpy as np
 from torch import nn
 import torch.utils.data as Data
 
-logger = logging.getLogger('Solver')
+logger = logging.getLogger('solver')
 stream = logging.StreamHandler(sys.stderr)
 formatter = logging.Formatter(fmt='%(name)s:  %(message)s - %(asctime)s',datefmt = '[%d/%b/%Y %H:%M:%S]')
 stream.setLevel(logging.INFO)

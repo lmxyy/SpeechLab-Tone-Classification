@@ -28,10 +28,11 @@ def work():
         y_val = torch.tensor(np.load(prefix+'/y_valid.npy'),dtype = torch.int64)
         data['y_val'] = y_val
     X_test = torch.tensor(np.load(prefix+'/X_test.npy'),dtype = torch.float32)
-    conv_dims = [(32,3)]
+    conv_dims = [(32,3),(64,3),(128,3)]
     # conv_dims = [(32,3)]
-    hidden_dims = [64,16,4]
+    hidden_dims = [256,128,4]
     # hidden_dims = []
+    # connect_conv = (256,3)
     connect_conv = None
     use_batchnorm = True
     
@@ -39,7 +40,7 @@ def work():
     solver = Solver(
         model = cnn,
         data = data,
-        num_epochs = 80,
+        num_epochs = 20,
         batch_size=20,
         update_rule='adam',
         optim_config={'lr': 1e-3,'betas':(0.9,0.999),'eps':1e-8,'weight_decay':0.05},
